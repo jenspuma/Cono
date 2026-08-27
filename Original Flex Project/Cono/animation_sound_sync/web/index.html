@@ -1,0 +1,46 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+
+	<title>Hisschemoller</title>
+
+	<style type="text/css">
+	html,body {
+		height:100%;
+		width:100%;
+		margin:0;
+		padding:0;
+		overflow:hidden;
+	}
+	#canvas {
+		height:400px;
+		width:400px;
+		margin:0 auto;
+	}
+	</style>
+    
+	<script type="text/javascript" language="javascript" src="static/js/swfobject.js"></script>
+	<script type="text/javascript" language="javascript">
+
+		window.onload = function() {
+			var flashvars  = {};
+			var params     = {};
+			var attributes = {};
+			params.base = "static/swf";
+			attributes.id = "flashApplication";
+			swfobject.embedSWF("static/swf/app.swf", "flashcontent", "400", "400", "10.0.0", "static/swf/expressInstall.swf", flashvars, params, attributes);
+		}
+	</script>
+</head>
+
+<body>
+	<div id="canvas">
+		<div id="flashcontent">
+			<p>Het lijkt erop dat je niet de goede versie van Flash op je computer hebt!<br />Je kunt Flash <a href="http://www.adobe.com/go/getflashplayer/">hier downloaden</a>.</p>
+		</div>
+	</div>
+</body>
+</html>

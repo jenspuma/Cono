@@ -1,0 +1,1 @@
+package com.hisschemoller.utils.midi {	/**	 * @author Wouter Hisschemöller	 * (c) May 21, 2009	 */	public class MidiSpecification 	{		public static const NUM_CHANNELS : uint = 16;		public static const SYSEX_CHANNEL : uint = 17;		public static const MAX_VALUE_7BIT : uint = 127;	}}

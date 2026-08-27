@@ -1,0 +1,13 @@
+
+@namespace s "library://ns.adobe.com/flex/spark";
+
+
+s|Application {
+   backgroundColor: #000000;
+   skinClass: ClassReference("ApplicationSkin");
+   /*backgroundGradientColors: #000000, #68808c;*/
+}
+
+s|ToggleButton {
+	skinClass: ClassReference("ButtonSkin");
+}

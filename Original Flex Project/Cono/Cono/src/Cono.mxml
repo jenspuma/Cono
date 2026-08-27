@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application 	xmlns:fx="http://ns.adobe.com/mxml/2009"
+				xmlns:mx="library://ns.adobe.com/flex/mx"
+				xmlns:s="library://ns.adobe.com/flex/spark"
+				skinClass="skin.ApplicationSkin"
+				width="1108" height="620"
+				applicationComplete="initApp();"
+				backgroundAlpha="0">
+				
+  
+  <fx:Script source="main.as"/> 
+    
+	<mx:VBox id="vb" width="520" x="570" y="55" />
+	<s:Label id="random" right="30" bottom="26" alpha="0.5" text="Ramdomize" fontFamily="Georgia" fontSize="10" click="RandomizeVerses()"
+						rollOver="{random.alpha=1;}" rollOut="{random.alpha=0.5;}"/>
+
+	<s:Group id="credits" x="10" y="65" height="150" fontSize="14" fontFamily="Georgia" alpha="0">
+		<s:Label height="31" left="50" top="0" text="Original idea and poetry by Raymond Queneau."/>
+		<s:Label height="31" left="50" top="36" text="English translation by Beverly Charles Rowe."/>
+		<s:Label height="31" left="50" top="72" text="Music, vocals, instruments, recording and"/>
+		<s:Label height="31" left="50" top="108" text="programming by Jens Brosbøl-Ravnborg."/>
+	</s:Group>
+
+	<s:Panel id="status" title="Loading music..." horizontalCenter="0" verticalCenter="0" height="200" width="300" alpha="0.8" color="black">
+		<mx:SWFLoader id="loader1" horizontalCenter="0" verticalCenter="0" source="assets/loadingcircle.swf"/>
+	</s:Panel>
+	
+	<s:Label id="cred" left="30" bottom="26" alpha="0.5" text="Credits" fontFamily="Georgia" fontSize="10"
+						rollOver="{credits.alpha=1; cred.alpha=1;}" rollOut="{credits.alpha=0; cred.alpha=0.5;}"/>
+		
+</s:Application>

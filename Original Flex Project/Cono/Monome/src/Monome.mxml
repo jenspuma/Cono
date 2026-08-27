@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application 	xmlns:fx="http://ns.adobe.com/mxml/2009"
+				xmlns:mx="library://ns.adobe.com/flex/mx"
+				xmlns:s="library://ns.adobe.com/flex/spark"
+				applicationComplete="initApp();">
+				
+  
+    <fx:Script source="main.as" />    
+    
+    <fx:Style source="style.css" />
+	
+	<s:layout>
+		<s:VerticalLayout horizontalAlign="center" gap="20" />
+	</s:layout>
+	
+	<mx:Grid>
+		<mx:GridRow>
+			<mx:GridItem><s:ToggleButton label="One" click="PlayDing()" /></mx:GridItem>
+			<mx:GridItem><s:ToggleButton label="Two"/></mx:GridItem>
+			<mx:GridItem><s:ToggleButton label="Three"/></mx:GridItem>
+			<mx:GridItem><s:ToggleButton label="Four"/></mx:GridItem>
+		</mx:GridRow>
+		<mx:GridRow>
+			<mx:GridItem><s:ToggleButton label="Five"/></mx:GridItem>
+			<mx:GridItem><s:ToggleButton label="Six"/></mx:GridItem>
+			<mx:GridItem><s:ToggleButton label="Seven"/></mx:GridItem>
+			<mx:GridItem><s:ToggleButton label="Eight"/></mx:GridItem>
+		</mx:GridRow>
+		<mx:GridRow>
+			<mx:GridItem><s:ToggleButton label="Nine"/></mx:GridItem>
+			<mx:GridItem><s:ToggleButton label="Ten"/></mx:GridItem>
+			<mx:GridItem><s:ToggleButton label="Eleven"/></mx:GridItem>
+			<mx:GridItem><s:ToggleButton label="Twelve"/></mx:GridItem>
+		</mx:GridRow>
+		<mx:GridRow>
+			<mx:GridItem><s:ToggleButton label="Thirteen"/></mx:GridItem>
+			<mx:GridItem><s:ToggleButton label="Fourteen"/></mx:GridItem>
+			<mx:GridItem><s:ToggleButton label="Fifteen"/></mx:GridItem>
+			<mx:GridItem><s:ToggleButton label="Sixteen"/></mx:GridItem>
+		</mx:GridRow>
+	</mx:Grid>
+	
+	<s:TextArea id="myTA" width="100%" height="100" fontSize="10" />
+ 
+</s:Application>

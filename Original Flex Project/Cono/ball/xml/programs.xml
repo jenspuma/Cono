@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<alldata>
+	<sounds>
+		<sound id="boing1" url="../mp3/0007_goink3.mp3" />
+		<sound id="boing2" url="../mp3/cc066.mp3" />
+		<sound id="boing3" url="../mp3/kick_flylo.mp3" />
+		<sound id="boing4" url="../mp3/0043_FM_Pt01_M_V3.mp3" />
+	</sounds>
+	<instruments>
+		<instrument id="instrument1" type="pitchedsample">
+			<program id="program1" index="0" type="pitchedsample" soundid="boing1" start="2250" end="" reverse="false" transpose="0" tune="0" />
+		</instrument>
+		<instrument id="instrument2" type="pitchedsample">
+			<program id="program1" index="0" type="pitchedsample" soundid="boing2" start="2250" end="" reverse="false" transpose="0" tune="0" />
+		</instrument>
+		<instrument id="instrument3" type="pitchedsample">
+			<program id="program1" index="0" type="pitchedsample" soundid="boing3" start="2250" end="" reverse="false" transpose="0" tune="0" />
+		</instrument>
+		<instrument id="instrument4" type="pitchedsample">
+			<program id="program1" index="0" type="pitchedsample" soundid="boing4" start="2250" end="" reverse="false" transpose="0" tune="0" />
+		</instrument>
+	</instruments>
+	<channels>
+		<channel index="0" instrumentid="instrument1" />
+		<channel index="1" instrumentid="instrument2" />
+		<channel index="2" instrumentid="instrument3" />
+		<channel index="3" instrumentid="instrument4" />
+	</channels>
+</alldata>

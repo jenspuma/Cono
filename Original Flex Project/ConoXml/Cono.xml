@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<song title="Cono" author="Jens Brosbøl-Ravnborg">
+    <file name="Music" path="./assets/music.mp3"/>
+    <file name="Verse1" path="./assets/verse1.mp3"/>
+    <file name="Verse2" path="./assets/verse2.mp3"/>
+    <file name="Verse3" path="./assets/verse3.mp3"/>
+    <file name="Verse4" path="./assets/verse4.mp3"/>
+    <file name="Verse5" path="./assets/verse5.mp3"/>
+    <file name="Verse6" path="./assets/verse6.mp3"/>
+    <file name="Verse7" path="./assets/verse7.mp3"/>
+    <file name="Verse8" path="./assets/verse8.mp3"/>
+    <file name="Verse9" path="./assets/verse9.mp3"/>
+    <file name="Verse10" path="./assets/verse10.mp3"/>
+    <file name="Verse11" path="./assets/verse11.mp3"/>
+    <file name="Verse12" path="./assets/verse12.mp3"/>
+
+    <chunk name="Music">
+        <filename>Music</filename>
+        <!--<begin>0</begin>-->
+        <!--<end>10000</end>-->
+        <loop>
+            <begin>2000</begin>
+            <end>10000</end>        
+        </loop>
+    </chunk>
+    <chunk name="Verse1">
+        <filename>Verse1</filename>
+    </chunk>
+    <chunk name="Verse2">
+        <filename>Verse2</filename>
+    </chunk>
+    <chunk name="Verse3">
+        <filename>Verse3</filename>
+    </chunk>
+    <chunk name="Verse4">
+        <filename>Verse4</filename>
+    </chunk>
+    <chunk name="Verse5">
+        <filename>Verse5</filename>
+    </chunk>
+    <chunk name="Verse6">
+        <filename>Verse6</filename>
+    </chunk>
+    <chunk name="Verse7">
+        <filename>Verse7</filename>
+    </chunk>
+    <chunk name="Verse8">
+        <filename>Verse8</filename>
+    </chunk>
+    <chunk name="Verse9">
+        <filename>Verse9</filename>
+    </chunk>
+    <chunk name="Verse10">
+        <filename>Verse10</filename>
+    </chunk>
+    <chunk name="Verse11">
+        <filename>Verse11</filename>
+    </chunk>
+    <chunk name="Verse12">
+        <filename>Verse12</filename>
+    </chunk>
+    
+    <timeline tempo="150">
+        <marker id="1" tick="0">
+            <playchunk loop="true">Music</playchunk>
+        </marker>
+        <marker id="2" tick="30">
+            <playchunk loop="true">Verse1</playchunk>
+            <playchunk loop="true">Verse2</playchunk>
+            <playchunk loop="true">Verse3</playchunk>
+            <playchunk loop="true">Verse4</playchunk>
+            <playchunk loop="true">Verse5</playchunk>
+            <playchunk loop="true">Verse6</playchunk>
+            <playchunk loop="true">Verse7</playchunk>
+            <playchunk loop="true">Verse8</playchunk>
+            <playchunk loop="true">Verse9</playchunk>
+            <playchunk loop="true">Verse10</playchunk>
+            <playchunk loop="true">Verse11</playchunk>
+            <playchunk loop="true">Verse12</playchunk>
+        </marker>
+        <marker id="3" tick="30">
+            <repeat tick="32" times="-1"/>
+            <action>ChooseVerse</action>
+        </marker>
+    </timeline>
+</song>

@@ -1,0 +1,39 @@
+6517 sampl/sixth
+44100 sampl/s
+
+--> 44100/6517 = 6,76 sixth/s
+
+60 s/min
+
+--> 6,76*60 = 406 sixth/min = 101,5 bpm
+
+
+Provide from 2048 through 8192 samples to the data property of the SampleDataEvent object (for each call to the event listener). For best performance, provide as many samples as possible (up to 8192). The fewer samples you provide, the more likely it is that clicks and pops will occur during playback. This behavior can differ on various platforms and can occur in various situations—for example, when resizing the browser. Code that works on one platform when you provide only 2048 sample might not work as well when run on a different platform. If you require the lowest latency possible, consider making the amount of data user-selectable.
+
+If you provide fewer than 2048 samples (per call to the sampleData event listener), the application stops after playing the remaining samples. The SoundChannel object then dispatches a SoundComplete event.
+
+
+int bpm2smp(float bmp)
+{
+  sxprmin = bpm*4;
+
+  sxprsec = sxprmin/60;
+
+  smpprsx = 44100/sxprsec;
+  
+  return smpprsx;
+}
+
+float smp2bpm(int smpprsx)
+{
+  sxprsec = 44100/smpprsx;
+  
+  sxprmin = sxprsec*60;
+  
+  bpm = sxprmin/4;
+
+  return bpm;
+}
+
+
+This means that max bpm is 333 (@2048 samples/sixth) and min bpm is 81 (@8192 samples/sixth)

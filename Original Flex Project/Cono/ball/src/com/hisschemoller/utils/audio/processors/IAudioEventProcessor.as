@@ -1,0 +1,1 @@
+package com.hisschemoller.utils.audio.processors {	/**	 * @author Wouter Hisschemöller	 * (c) Apr 25, 2009	 */	public interface IAudioEventProcessor 	{		function processEvents(from : Number, to : Number) : Vector.<IAudioProcessor>;	}}

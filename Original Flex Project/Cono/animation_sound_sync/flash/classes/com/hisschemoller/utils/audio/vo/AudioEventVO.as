@@ -1,0 +1,1 @@
+package com.hisschemoller.utils.audio.vo {	import com.hisschemoller.utils.audio.processors.IAudioProcessor;		/**	 * @author Wouter Hisschemöller	 * (c) Jul 17, 2009	 */	public class AudioEventVO 	{		public var audioProcessor : IAudioProcessor;		public var instrument : InstrumentVO;	}}

@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009"
+               xmlns:s="library://ns.adobe.com/flex/spark"
+               xmlns:mx="library://ns.adobe.com/flex/mx"
+			   creationComplete="doInit()"
+			   enterFrame="EnterFrame(event)">
+	
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	<fx:Script>
+        <![CDATA[
+            import mx.events.VideoEvent;
+
+			private function doInit():void
+			{
+				videoDisplay1.pause();
+				videoDisplay0.blendMode = BlendMode.DARKEN;
+				videoDisplay1.blendMode = BlendMode.LIGHTEN;
+			}
+			
+			public function EnterFrame(event:Event):void
+			{
+				time.text = "Time" + videoDisplay0.currentTime;
+			}
+
+			
+            private function playPauseButton_click(evt:MouseEvent):void 
+			{
+                if (videoDisplay0.playing) 
+				{
+                    videoDisplay0.pause();
+					videoDisplay1.seek(videoDisplay0.currentTime);
+					videoDisplay1.play();
+					playPauseButton.label = "Play 0";
+                } 
+				else 
+				{
+                    videoDisplay1.pause();
+					videoDisplay0.seek(videoDisplay1.currentTime);
+					videoDisplay0.play();
+					playPauseButton.label = "Play 1";
+                }
+            }
+             private function seekButton_click(evt:MouseEvent):void 
+			{
+				videoDisplay0.seek(videoDisplay0.currentTime + 10);
+            }
+ 
+        ]]>
+    </fx:Script>
+	
+	<fx:Style>
+     @namespace s "library://ns.adobe.com/flex/spark";
+
+     @font-face 
+	 {
+        src:url("..\bin\SoulMission.ttf");
+        fontFamily: myFontFamily;
+        embedAsCFF: true;
+     }
+     
+     s|Button 
+	 {
+        fontFamily: myFontFamily;
+        fontSize: 15;
+		color: #AA0000;
+     }
+     
+	 s|Application 
+	 {
+		backgroundColor: #00AA00;
+     }
+     
+	</fx:Style>
+	
+	<s:Group>
+		<s:layout>
+           <s:VerticalLayout gap="10" horizontalAlign="contentJustify" />
+        </s:layout>
+		<s:VideoDisplay
+			id="videoDisplay0"
+			source="More.flv"
+			loop="false"
+			muted="false" />
+
+		<s:VideoDisplay
+			id="videoDisplay1"
+			source="More.flv"
+			loop="false"
+			muted="false" />
+
+
+		<s:Button label="Pause" id="playPauseButton" click="playPauseButton_click(event)" />
+		<s:Button label="+10"   id="plusTenButton"   click="seekButton_click(event)" />
+		<s:Label id="time" text="nothing" />
+	</s:Group>
+	
+</s:Application>

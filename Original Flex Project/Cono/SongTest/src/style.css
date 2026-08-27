@@ -1,0 +1,7 @@
+
+@namespace mx "library://ns.adobe.com/flex/mx";
+
+mx|Application {
+   backgroundColor: #000000;
+   /*backgroundGradientColors: #000000, #68808c;*/
+}

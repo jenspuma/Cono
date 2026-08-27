@@ -1,0 +1,1 @@
+package com.hisschemoller.utils.midi {	/**	 * @author Wouter Hisschemöller	 * (c) May 12, 2009	 */	public class MidiEventVO	{		public var type : String;		public var deltaTime : uint; /** Time in milliSeconds. */		public var channel : uint;				public function parseXML(o : XML) : Boolean		{			deltaTime = o.Delta;						return true;		}	}}

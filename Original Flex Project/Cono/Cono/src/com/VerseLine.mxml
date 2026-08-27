@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas 	xmlns:fx="http://ns.adobe.com/mxml/2009" 
+						xmlns:mx="library://ns.adobe.com/flex/mx" 
+						xmlns:s="library://ns.adobe.com/flex/spark" 
+						creationComplete="init();"
+						width="100%"
+						height="31">
+	
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+
+	<fx:Script>
+		<![CDATA[
+			public var lineNumber:int;
+			public var xml:XML;
+			public var verseNumber:int;
+			public var onVerseChange:Function;
+			
+			public function init():void
+			{
+				theline.text = xml.verse[verseNumber].line[lineNumber];
+				vrsno.text = (verseNumber+1).toString();
+				prev.visible = false; 
+				next.visible = false;
+				onVerseChange(this);
+			}
+			
+			private function prevClick(evt:MouseEvent):void
+			{
+				verseNumber = Math.max(0, verseNumber - 1);
+				vrsno.text = (verseNumber+1).toString();
+				theline.text = xml.verse[verseNumber].line[lineNumber];
+				onVerseChange(this);
+			}
+			
+			private function nextClick(evt:MouseEvent):void
+			{
+				verseNumber = Math.min(11, verseNumber + 1);
+				vrsno.text = (verseNumber+1).toString();
+				theline.text = xml.verse[verseNumber].line[lineNumber];
+				onVerseChange(this);
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<s:Group width="100%" height="100%" rollOver="{prev.visible=true; next.visible=true;}" rollOut="{prev.visible=false; next.visible=false;}" fontSize="14" fontFamily="Georgia">
+		<s:Label verticalCenter="0" left="3" width="{height}" id="prev" text="-" fontSize="18" click="prevClick(event)"/>
+		<s:Label verticalCenter="0" left="30" id="vrsno" text="0" />
+		<s:Label verticalCenter="0" left="50" id="theline" text="default text"/>
+		<s:Label verticalCenter="0" right="3" width="{height}" id="next" text="+"  fontSize="18" click="nextClick(event)"/>	
+	</s:Group>
+</mx:Canvas>

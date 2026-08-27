@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" initialize="initApp()">
+  
+    <mx:Script source="main.as" />    
+    
+    <mx:Style source="style.css" />
+
+    <mx:Panel title="More" height="75%" width="75%"
+        paddingTop="10" paddingLeft="10" paddingRight="10" paddingBottom="10">
+
+        <mx:TextArea id="myTA" width="100%" height="100%"/>
+
+        <mx:Button label="End Loop" id="ButtonEndLoop" click="EndLoopClickHandler(event);">
+        </mx:Button>
+ 
+        <mx:Button label="Rocket!" id="ButtonRocket" click="rocketClickHandler(event);">
+        </mx:Button>	
+ 
+
+    </mx:Panel>
+</mx:Application>

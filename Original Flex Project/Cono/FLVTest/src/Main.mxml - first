@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009"
+               xmlns:s="library://ns.adobe.com/flex/spark"
+               xmlns:mx="library://ns.adobe.com/flex/mx">
+	
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	<fx:Script>
+        <![CDATA[
+            import mx.events.VideoEvent;
+
+            private function playPauseButton_click(evt:MouseEvent):void 
+			{
+                if (videoDisplay.playing) 
+				{
+                    videoDisplay.pause();
+					playPauseButton.label = "Play";
+                } 
+				else 
+				{
+                    videoDisplay.play();
+					playPauseButton.label = "Pause";
+                }
+            }
+             private function seekButton_click(evt:MouseEvent):void 
+			{
+				videoDisplay.seek(videoDisplay.currentTime + 10);
+            }
+ 
+        ]]>
+    </fx:Script>
+	
+	<fx:Style>
+     @namespace s "library://ns.adobe.com/flex/spark";
+
+     @font-face 
+	 {
+        src:url("..\bin\SoulMission.ttf");
+        fontFamily: myFontFamily;
+        embedAsCFF: true;
+     }
+     
+     s|Button 
+	 {
+        fontFamily: myFontFamily;
+        fontSize: 15;
+		color: #AA0000;
+     }     
+	</fx:Style>
+	
+	<s:VideoDisplay
+		id="videoDisplay"
+        source="More.flv"
+        loop="false"
+		muted="false" />
+
+	<s:Button label="Pause" x="10"  y="370" id="playPauseButton" click="playPauseButton_click(event)" />
+	<s:Button label="+10" 	x="100" y="370" id="plusTenButton"   click="seekButton_click(event)" />
+
+	
+</s:Application>

@@ -1,0 +1,1 @@
+package com.hisschemoller.utils.midi{	/**	 * @author Wouter Hisschemöller	 * (c) May 12, 2009	 */	public class MidiTimestampType 	{		public static const ABSOLUTE : String = "Absolute";		public static const DELTA : String = "Delta";	}}
