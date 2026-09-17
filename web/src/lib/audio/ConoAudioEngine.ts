@@ -47,7 +47,7 @@ export class ConoAudioEngine {
   }
 
   async play(
-    selections: number[],
+    getSelections: () => number[],
     onLineChange?: (line: number) => void,
     onStop?: () => void
   ): Promise<void> {
@@ -65,7 +65,8 @@ export class ConoAudioEngine {
     this.musicSource = ctx.createBufferSource();
     this.musicSource.buffer = this.musicBuffer;
     this.musicSource.connect(ctx.destination);
-    this.musicSource.start(this.startTime);
+    // The old Flash engine skipped the same encoder delay on every SoundChunk.
+    this.musicSource.start(this.startTime, MP3_LEAD_SILENCE_SECONDS);
 
     this.voiceGains = this.voiceBuffers.map(() => {
       const gain = ctx.createGain();
@@ -84,7 +85,8 @@ export class ConoAudioEngine {
     });
 
     const applyLine = () => {
-      if (!this.context) return;
+      if (!this.context || this.currentLine >= LINE_COUNT) return;
+      const selections = getSelections();
       const selectedVoice = selections[this.currentLine] ?? 0;
       const when = this.context.currentTime;
       this.voiceGains.forEach((gain, index) => {
@@ -97,10 +99,7 @@ export class ConoAudioEngine {
     const firstLineDelay = Math.max(0, (this.startTime + VOCAL_START_SECONDS - ctx.currentTime) * 1000);
     window.setTimeout(() => {
       applyLine();
-      this.lineTimer = window.setInterval(() => {
-        if (this.currentLine >= LINE_COUNT) return;
-        applyLine();
-      }, LINE_DURATION_SECONDS * 1000);
+      this.lineTimer = window.setInterval(applyLine, LINE_DURATION_SECONDS * 1000);
     }, firstLineDelay);
 
     this.stopTimer = window.setTimeout(() => {
