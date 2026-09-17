@@ -56,7 +56,7 @@
       isPlaying = true;
       currentLine = -1;
       await engine.play(
-        selections,
+        () => selections,
         (line) => (currentLine = line),
         () => {
           isPlaying = false;
