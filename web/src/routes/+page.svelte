@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { base } from '$app/paths';
   import { ConoAudioEngine } from '$lib/audio/ConoAudioEngine';
 
   const engine = new ConoAudioEngine();
@@ -12,12 +13,20 @@
   let error = '';
   let isPlaying = false;
   let currentLine = -1;
+  let mounted = false;
 
-  onMount(async () => {
+  onMount(() => {
+    mounted = true;
+    void load();
+    return () => { mounted = false; engine.dispose(); };
+  });
+
+  async function load() {
     try {
       const lyricsResponse = await fetch('./assets/lyrics.xml');
       if (!lyricsResponse.ok) throw new Error('Could not load lyrics.xml');
-      const xmlText = await lyricsResponse.text();
+      // The original XML is Windows-1252, not UTF-8.
+      const xmlText = new TextDecoder('windows-1252').decode(await lyricsResponse.arrayBuffer());
       const xml = new DOMParser().parseFromString(xmlText, 'application/xml');
       poems = Array.from(xml.querySelectorAll('verse')).map((verse) =>
         Array.from(verse.querySelectorAll('line')).map((line) => line.textContent?.trim() ?? '')
@@ -27,6 +36,7 @@
         throw new Error(`Unexpected lyric structure: ${poems.length} poems loaded`);
       }
 
+      if (!mounted) return;
       await engine.load((loaded, total) => {
         loadedAudio = loaded;
         audioTotal = total;
@@ -36,18 +46,18 @@
       error = e instanceof Error ? e.message : String(e);
       loading = false;
     }
-
-    return () => engine.stop();
-  });
+  }
 
   function changeVerse(line: number, delta: number) {
     selections = selections.map((value, index) =>
       index === line ? Math.max(0, Math.min(11, value + delta)) : value
     );
+    engine.updateSelections();
   }
 
   function randomize() {
     selections = selections.map(() => Math.floor(Math.random() * 12));
+    engine.updateSelections();
   }
 
   async function play() {
@@ -85,7 +95,7 @@
 </svelte:head>
 
 <main class="stage">
-  <section class="book" aria-label="Interactive poem">
+  <section class="book" style:background-image={`url("${base}/assets/Book.png")`} aria-label="Interactive poem">
     <div class="controls top-controls">
       <button onclick={isPlaying ? stop : play} disabled={loading || !!error}>
         {isPlaying ? 'Stop' : 'Play'}
@@ -147,7 +157,9 @@
     width: min(1108px, 100%);
     aspect-ratio: 1108 / 620;
     min-height: 620px;
-    background: url('./assets/Book.png') center / 100% 100% no-repeat;
+    background-position: center;
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
     box-shadow: 0 24px 70px rgb(0 0 0 / 0.38);
     overflow: hidden;
   }

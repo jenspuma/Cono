@@ -1,0 +1,37 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>Cono audio verification</title><base href="/"><button id="run">Run audio verification</button><pre id="results">Ready</pre><script type="module">
+import { ConoAudioEngine, conoTiming } from '/src/lib/audio/ConoAudioEngine.ts';
+const output=document.querySelector('#results');
+const log=(s)=>output.textContent+='\n'+s;
+const assert=(condition,label)=>{if(!condition)throw Error(label);log('PASS '+label);};
+const NativeContext=window.AudioContext;let context;const sources=[],gains=[];
+window.AudioContext=class extends NativeContext {
+ constructor(){super();context=this;}
+ createBufferSource(){const s=super.createBufferSource();const record={node:s,starts:[],stops:[]};sources.push(record);const start=s.start.bind(s),stop=s.stop.bind(s);s.start=(...a)=>{record.starts.push(a);start(...a);};s.stop=(...a)=>{record.stops.push(a);stop(...a);};return s;}
+ createGain(){const g=super.createGain();gains.push(g);return g;}
+};
+document.querySelector('#run').onclick=async()=>{
+ document.querySelector('#run').disabled=true;output.textContent='Running actual browser decode / audio-clock verification';
+ const e=new ConoAudioEngine();
+ try{
+ await e.load();assert(sources.length===0,'all 13 MP3 files fetched and decoded');
+ let selections=Array(14).fill(0),lines=[];
+ await e.play(()=>selections,l=>{lines.push({line:l,time:context.currentTime});log('UI line '+l+' at '+(context.currentTime-sources[0].starts[0][0]).toFixed(3)+'s');});
+ const start=sources[0].starts[0][0];
+ assert(sources.length===13,'13 native Web Audio sources');
+ assert(sources.slice(1).every(s=>Math.abs(s.starts[0][0]-start-5.6)<1e-9),'all vocals scheduled exactly 5.6s after Music');
+ assert(sources.every(s=>Math.abs(s.starts[0][1]-2256/44100)<1e-9),'matching 2256/44100s offset on all tracks');
+ for(let i=0;i<sources.length;i++){
+ const b=sources[i].node.buffer,data=b.getChannelData(0);let first=0;while(first<data.length&&Math.abs(data[first])<0.001)first++;
+ log(JSON.stringify({asset:i===0?'Music':'Verse'+i,sampleRate:b.sampleRate,duration:b.duration,firstAboveMinus60dB:first/b.sampleRate}));
+ }
+ await new Promise(r=>setTimeout(r,6100));assert(gains[0].gain.value===1&&gains.slice(1).every(g=>g.gain.value===0),'only selected voice audible after intro');
+ selections[0]=4;selections[1]=11;e.updateSelections();
+ await new Promise(r=>setTimeout(r,100));assert(gains[4].gain.value===1&&gains[0].gain.value===0,'current line edit changes audible source live');
+ await new Promise(r=>setTimeout(r,6200));assert(gains[11].gain.value===1&&gains[4].gain.value===0,'next line switches to edited choice at 12.0s');
+ assert(lines.some(l=>l.line===1),'line indicator advances');e.stop();
+ await e.play(()=>selections,l=>lines.push({line:l,time:context.currentTime}));e.stop();const count=lines.length;
+ await new Promise(r=>setTimeout(r,6100));assert(lines.length===count,'Stop during intro leaves no stale callbacks');
+ log('COMPLETE');
+ }catch(error){log('FAIL '+error.stack);}finally{e.dispose();}
+};
+</script></html>

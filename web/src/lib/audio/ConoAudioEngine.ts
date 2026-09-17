@@ -17,12 +17,14 @@ export class ConoAudioEngine {
   private voiceSources: AudioBufferSourceNode[] = [];
   private voiceGains: GainNode[] = [];
   private lineTimer: number | null = null;
-  private stopTimer: number | null = null;
+  private generation = 0;
+  private getSelections: (() => number[]) | null = null;
   private startTime = 0;
-  private currentLine = 0;
+  private currentLine = -1;
 
   async load(onProgress?: (loaded: number, total: number) => void): Promise<void> {
     if (!this.context) this.context = new AudioContext();
+    const context = this.context;
 
     const urls = [
       './assets/Music.mp3',
@@ -35,13 +37,14 @@ export class ConoAudioEngine {
         const response = await fetch(url);
         if (!response.ok) throw new Error(`Could not load ${url}`);
         const data = await response.arrayBuffer();
-        const buffer = await this.context!.decodeAudioData(data);
+        const buffer = await context.decodeAudioData(data);
         loaded += 1;
         onProgress?.(loaded, urls.length);
         return buffer;
       })
     );
 
+    if (this.context !== context) return;
     this.musicBuffer = buffers[0];
     this.voiceBuffers = buffers.slice(1);
   }
@@ -56,11 +59,14 @@ export class ConoAudioEngine {
     }
 
     this.stop();
+    const generation = this.generation;
     await this.context.resume();
+    if (generation !== this.generation) return;
 
     const ctx = this.context;
     this.startTime = ctx.currentTime + 0.1;
-    this.currentLine = 0;
+    this.currentLine = -1;
+    this.getSelections = getSelections;
 
     this.musicSource = ctx.createBufferSource();
     this.musicSource.buffer = this.musicBuffer;
@@ -84,40 +90,61 @@ export class ConoAudioEngine {
       return source;
     });
 
-    const applyLine = () => {
-      if (!this.context || this.currentLine >= LINE_COUNT) return;
-      const selections = getSelections();
-      const selectedVoice = selections[this.currentLine] ?? 0;
-      const when = this.context.currentTime;
-      this.voiceGains.forEach((gain, index) => {
-        gain.gain.setValueAtTime(index === selectedVoice ? 1 : 0, when);
-      });
-      onLineChange?.(this.currentLine);
-      this.currentLine += 1;
-    };
-
-    const firstLineDelay = Math.max(0, (this.startTime + VOCAL_START_SECONDS - ctx.currentTime) * 1000);
-    window.setTimeout(() => {
-      applyLine();
-      this.lineTimer = window.setInterval(applyLine, LINE_DURATION_SECONDS * 1000);
-    }, firstLineDelay);
-
-    this.stopTimer = window.setTimeout(() => {
-      this.stop(false);
+    // Audio events are scheduled once on the shared audio clock, so a busy or
+    // background tab cannot delay a vocal boundary. UI timers only paint state.
+    this.updateSelections();
+    const endTime = this.startTime + VOCAL_START_SECONDS + LINE_COUNT * LINE_DURATION_SECONDS;
+    this.musicSource.stop(endTime);
+    this.voiceSources.forEach((source) => source.stop(endTime));
+    const finish = () => {
+      if (generation !== this.generation) return;
+      this.stop();
       onStop?.();
-    }, firstLineDelay + LINE_COUNT * LINE_DURATION_SECONDS * 1000);
+    };
+    // The backing recording is longer than this one-cycle MVP.
+    this.musicSource.onended = finish;
+    const updateLine = () => {
+      if (generation !== this.generation) return;
+      const elapsed = ctx.currentTime - this.startTime - VOCAL_START_SECONDS;
+      const line = Math.min(LINE_COUNT - 1, Math.floor(elapsed / LINE_DURATION_SECONDS));
+      if (elapsed >= LINE_COUNT * LINE_DURATION_SECONDS) { finish(); return; }
+      if (line >= 0 && line !== this.currentLine) {
+        this.currentLine = line;
+        onLineChange?.(line);
+      }
+    };
+    this.lineTimer = window.setInterval(updateLine, 25);
   }
 
-  stop(resetLine = true): void {
+  updateSelections(): void {
+    if (!this.context || !this.getSelections || !this.voiceGains.length) return;
+    const now = this.context.currentTime;
+    const vocalStart = this.startTime + VOCAL_START_SECONDS;
+    const activeLine = Math.floor((now - vocalStart) / LINE_DURATION_SECONDS);
+    const selections = this.getSelections();
+    this.voiceGains.forEach((gain, voice) => {
+      gain.gain.cancelScheduledValues(now);
+      // Editing the current line changes its voice immediately at the same
+      // playback position; future lines retain sample-timed boundaries.
+      gain.gain.setValueAtTime(
+        activeLine >= 0 && activeLine < LINE_COUNT && (selections[activeLine] ?? 0) === voice ? 1 : 0,
+        now
+      );
+      for (let line = Math.max(0, activeLine + 1); line < LINE_COUNT; line++) {
+        gain.gain.setValueAtTime((selections[line] ?? 0) === voice ? 1 : 0,
+          vocalStart + line * LINE_DURATION_SECONDS);
+      }
+    });
+  }
+
+  stop(): void {
+    this.generation += 1;
+    this.getSelections = null;
     if (this.lineTimer !== null) {
       window.clearInterval(this.lineTimer);
       this.lineTimer = null;
     }
-    if (this.stopTimer !== null) {
-      window.clearTimeout(this.stopTimer);
-      this.stopTimer = null;
-    }
-
+    if (this.musicSource) this.musicSource.onended = null;
     try {
       this.musicSource?.stop();
     } catch {}
@@ -127,10 +154,21 @@ export class ConoAudioEngine {
       } catch {}
     });
 
+    this.musicSource?.disconnect();
+    this.voiceSources.forEach((source) => source.disconnect());
+    this.voiceGains.forEach((gain) => gain.disconnect());
     this.musicSource = null;
     this.voiceSources = [];
     this.voiceGains = [];
-    if (resetLine) this.currentLine = 0;
+    this.currentLine = -1;
+  }
+
+  dispose(): void {
+    this.stop();
+    void this.context?.close();
+    this.context = null;
+    this.musicBuffer = null;
+    this.voiceBuffers = [];
   }
 }
 
