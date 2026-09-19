@@ -68,3 +68,23 @@ The release candidate includes the continuous audio-loop implementation, editori
 assets, source poem numbers (01–12), and About / Credits disclosure. Svelte check,
 all seven audio tests, and the static production build pass. Automated browser
 review was unavailable; visual acceptance is based on the owner’s manual testing.
+
+## GitHub Pages
+
+Production URL: https://jenspuma.github.io/Cono/
+
+The Pages workflow checks, tests and builds every pull request to `main`. Pushes
+and merges to `main` deploy the validated `web/build` artifact. In repository
+Settings → Pages, the source must be **GitHub Actions**. The workflow uses Node 24.
+
+Local development remains at `/`. To reproduce the production subdirectory:
+
+```bash
+BASE_PATH=/Cono npm run build
+BASE_PATH=/Cono npm run preview
+```
+
+Open `/Cono/` on the preview URL. The trailing slash keeps relative audio and XML
+requests under `/Cono/`; generated scripts, styles and artwork use SvelteKit's base
+path. A future custom domain at the root requires changing the workflow BASE_PATH
+to an empty string and rebuilding.
