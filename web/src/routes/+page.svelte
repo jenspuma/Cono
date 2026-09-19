@@ -93,7 +93,7 @@
 
 <main class="stage">
   <article class="edition" aria-label="Interactive musical poem">
-    <div class="margin-label left-label" aria-hidden="true">Poetry<br />Music<br />Algorithms<br />Humanity<br />Still</div>
+    <div class="margin-label left-label" aria-hidden="true">Poetry<br />Music<br />Algorithms</div>
     <div class="margin-label right-label" aria-hidden="true">Same<br />words<br />new<br />worlds<span class="small-rule"></span></div>
 
     <header>
@@ -127,7 +127,7 @@
     <section class="poem" aria-label="Fourteen lines of the poem">
       {#each selections as verseIndex, lineIndex}
         <div class="line-row" class:active={currentLine === lineIndex} aria-current={currentLine === lineIndex ? 'true' : undefined}>
-          <span class="line-number">{String(lineIndex + 1).padStart(2, '0')}</span>
+          <span class="line-number" aria-label={`Source poem ${verseIndex + 1}`}>{String(verseIndex + 1).padStart(2, '0')}</span>
           <button class="step" aria-label={`Previous source poem for line ${lineIndex + 1}`} title={`Source poem ${verseIndex + 1} of 12`} onclick={() => changeVerse(lineIndex, -1)} disabled={loading || verseIndex === 0}>
             <svg viewBox="0 0 16 24" aria-hidden="true"><path d="m10 5-4 7 4 7" /></svg>
           </button>
@@ -144,7 +144,6 @@
       <img src={`${base}/assets/editorial/botanical-sprig.png`} alt="" width="1024" height="1536" />
     </aside>
 
-    <div class="margin-label author" aria-hidden="true">Raymond<br />Queneau<span class="small-rule"></span></div>
     <details class="about">
       <summary><span>About / Credits</span></summary>
       <div class="about-content">
@@ -212,8 +211,6 @@
   .paper-note p, .botanical p { margin: 0; font-style: italic; letter-spacing: .1em; font-size: clamp(14px, 1.25vw, 18px); line-height: 1.4; }
   .botanical { position: absolute; right: 0; top: 298px; width: 13%; pointer-events: none; }
   .botanical img { display: block; width: 135%; height: auto; max-height: 380px; object-fit: contain; margin: 75px 0 0 -6%; }
-  .author { left: 3.3%; bottom: 30px; }
-  .author .small-rule { margin-top: 12px; width: 24px; }
   .about { position: relative; z-index: 2; width: 66%; margin: 95px auto 0; }
   summary { display: flex; align-items: center; gap: 28px; cursor: pointer; list-style: none; padding: 10px 0; font-size: 12px; letter-spacing: .32em; }
   summary::-webkit-details-marker { display: none; }
@@ -245,7 +242,7 @@
     header { width: 100%; }
     h1 { font-size: clamp(33px, 6.6vw, 48px); max-width: 560px; margin: auto; }
     .subtitle { max-width: 450px; margin: 14px auto 0; font-size: 16px; }
-    .left-label, .right-label, .author, .botanical { display: none; }
+    .left-label, .right-label, .botanical { display: none; }
     .controls { gap: 30px; margin-top: 24px; }
     .control-disc { width: 50px; height: 50px; }
     .transport { font-size: 13px; }
