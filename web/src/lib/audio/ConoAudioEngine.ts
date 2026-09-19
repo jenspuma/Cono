@@ -6,6 +6,9 @@ const TICK_SECONDS = 0.1; // 150 BPM, one tick = one sixteenth note
 const VOCAL_START_SECONDS = INTRO_TICK * TICK_SECONDS; // 5.6s
 const LINE_DURATION_SECONDS = 64 * TICK_SECONDS; // 6.4s
 const LINE_COUNT = 14;
+const CYCLE_SECONDS = LINE_COUNT * LINE_DURATION_SECONDS;
+const MUSIC_LOOP_START_SECONDS = 96;
+const MUSIC_LOOP_SECONDS = 537.6;
 const MP3_LEAD_SILENCE_SAMPLES = 2256;
 const MP3_LEAD_SILENCE_SECONDS = MP3_LEAD_SILENCE_SAMPLES / SAMPLE_RATE;
 
@@ -15,12 +18,11 @@ export class ConoAudioEngine {
   private voiceBuffers: AudioBuffer[] = [];
   private musicSource: AudioBufferSourceNode | null = null;
   private voiceSources: AudioBufferSourceNode[] = [];
-  private voiceGains: GainNode[] = [];
-  private lineTimer: number | null = null;
+  private mixer: AudioWorkletNode | null = null;
   private generation = 0;
   private getSelections: (() => number[]) | null = null;
   private startTime = 0;
-  private currentLine = -1;
+
 
   async load(onProgress?: (loaded: number, total: number) => void): Promise<void> {
     if (!this.context) this.context = new AudioContext();
@@ -45,14 +47,26 @@ export class ConoAudioEngine {
     );
 
     if (this.context !== context) return;
+    await context.audioWorklet.addModule('./assets/cono-mixer.js');
+    if (this.context !== context) return;
     this.musicBuffer = buffers[0];
-    this.voiceBuffers = buffers.slice(1);
+    // Some recordings end slightly before 89.6s. Pad with silence rather than
+    // looping at their file length, which would progressively lose sync.
+    this.voiceBuffers = buffers.slice(1).map((buffer) => {
+      const loop = context.createBuffer(buffer.numberOfChannels,
+        Math.round(CYCLE_SECONDS * buffer.sampleRate), buffer.sampleRate);
+      const offset = Math.round(MP3_LEAD_SILENCE_SECONDS * buffer.sampleRate);
+      for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
+        loop.copyToChannel(buffer.getChannelData(channel).subarray(offset, offset + loop.length), channel);
+      }
+      return loop;
+    });
   }
 
   async play(
     getSelections: () => number[],
     onLineChange?: (line: number) => void,
-    onStop?: () => void
+    onVerseChange?: (selections: number[]) => void
   ): Promise<void> {
     if (!this.context || !this.musicBuffer || this.voiceBuffers.length !== 12) {
       throw new Error('Audio has not been loaded');
@@ -65,86 +79,60 @@ export class ConoAudioEngine {
 
     const ctx = this.context;
     this.startTime = ctx.currentTime + 0.1;
-    this.currentLine = -1;
     this.getSelections = getSelections;
+
+    this.mixer = new AudioWorkletNode(ctx, 'cono-mixer', {
+      numberOfInputs: 12,
+      numberOfOutputs: 1,
+      outputChannelCount: [2],
+      processorOptions: {
+        startTime: this.startTime + VOCAL_START_SECONDS,
+        selections: getSelections(),
+        lineDuration: LINE_DURATION_SECONDS
+      }
+    });
+    this.mixer.port.onmessage = ({ data }) => {
+      if (generation !== this.generation) return;
+      onVerseChange?.(data.selections);
+      onLineChange?.(data.line);
+    };
+    this.mixer.connect(ctx.destination);
 
     this.musicSource = ctx.createBufferSource();
     this.musicSource.buffer = this.musicBuffer;
+    this.musicSource.loop = true;
+    // Original XML: play the intro once, then repeat ticks 960..6336.
+    this.musicSource.loopStart = MUSIC_LOOP_START_SECONDS + MP3_LEAD_SILENCE_SECONDS;
+    this.musicSource.loopEnd = this.musicSource.loopStart + MUSIC_LOOP_SECONDS;
     this.musicSource.connect(ctx.destination);
-    // The old Flash engine skipped the same encoder delay on every SoundChunk.
     this.musicSource.start(this.startTime, MP3_LEAD_SILENCE_SECONDS);
-
-    this.voiceGains = this.voiceBuffers.map(() => {
-      const gain = ctx.createGain();
-      gain.gain.value = 0;
-      gain.connect(ctx.destination);
-      return gain;
-    });
 
     this.voiceSources = this.voiceBuffers.map((buffer, index) => {
       const source = ctx.createBufferSource();
       source.buffer = buffer;
-      source.connect(this.voiceGains[index]);
-      // Keep the compensation from the old Flash engine as a first approximation.
-      source.start(this.startTime + VOCAL_START_SECONDS, MP3_LEAD_SILENCE_SECONDS);
+      source.loop = true;
+      source.loopStart = 0;
+      source.loopEnd = CYCLE_SECONDS;
+      source.connect(this.mixer!, 0, index);
+      source.start(this.startTime + VOCAL_START_SECONDS);
       return source;
     });
-
-    // Audio events are scheduled once on the shared audio clock, so a busy or
-    // background tab cannot delay a vocal boundary. UI timers only paint state.
-    this.updateSelections();
-    const endTime = this.startTime + VOCAL_START_SECONDS + LINE_COUNT * LINE_DURATION_SECONDS;
-    this.musicSource.stop(endTime);
-    this.voiceSources.forEach((source) => source.stop(endTime));
-    const finish = () => {
-      if (generation !== this.generation) return;
-      this.stop();
-      onStop?.();
-    };
-    // The backing recording is longer than this one-cycle MVP.
-    this.musicSource.onended = finish;
-    const updateLine = () => {
-      if (generation !== this.generation) return;
-      const elapsed = ctx.currentTime - this.startTime - VOCAL_START_SECONDS;
-      const line = Math.min(LINE_COUNT - 1, Math.floor(elapsed / LINE_DURATION_SECONDS));
-      if (elapsed >= LINE_COUNT * LINE_DURATION_SECONDS) { finish(); return; }
-      if (line >= 0 && line !== this.currentLine) {
-        this.currentLine = line;
-        onLineChange?.(line);
-      }
-    };
-    this.lineTimer = window.setInterval(updateLine, 25);
   }
 
   updateSelections(): void {
-    if (!this.context || !this.getSelections || !this.voiceGains.length) return;
-    const now = this.context.currentTime;
-    const vocalStart = this.startTime + VOCAL_START_SECONDS;
-    const activeLine = Math.floor((now - vocalStart) / LINE_DURATION_SECONDS);
-    const selections = this.getSelections();
-    this.voiceGains.forEach((gain, voice) => {
-      gain.gain.cancelScheduledValues(now);
-      // Editing the current line changes its voice immediately at the same
-      // playback position; future lines retain sample-timed boundaries.
-      gain.gain.setValueAtTime(
-        activeLine >= 0 && activeLine < LINE_COUNT && (selections[activeLine] ?? 0) === voice ? 1 : 0,
-        now
-      );
-      for (let line = Math.max(0, activeLine + 1); line < LINE_COUNT; line++) {
-        gain.gain.setValueAtTime((selections[line] ?? 0) === voice ? 1 : 0,
-          vocalStart + line * LINE_DURATION_SECONDS);
-      }
-    });
+    if (!this.getSelections) return;
+    this.mixer?.port.postMessage({ type: 'selections', selections: this.getSelections() });
   }
 
   stop(): void {
     this.generation += 1;
     this.getSelections = null;
-    if (this.lineTimer !== null) {
-      window.clearInterval(this.lineTimer);
-      this.lineTimer = null;
+    if (this.mixer) {
+      this.mixer.port.onmessage = null;
+      this.mixer.port.postMessage({ type: 'stop' });
+      this.mixer.disconnect();
+      this.mixer = null;
     }
-    if (this.musicSource) this.musicSource.onended = null;
     try {
       this.musicSource?.stop();
     } catch {}
@@ -156,11 +144,8 @@ export class ConoAudioEngine {
 
     this.musicSource?.disconnect();
     this.voiceSources.forEach((source) => source.disconnect());
-    this.voiceGains.forEach((gain) => gain.disconnect());
     this.musicSource = null;
     this.voiceSources = [];
-    this.voiceGains = [];
-    this.currentLine = -1;
   }
 
   dispose(): void {
@@ -177,5 +162,8 @@ export const conoTiming = {
   vocalStartSeconds: VOCAL_START_SECONDS,
   lineDurationSeconds: LINE_DURATION_SECONDS,
   lineCount: LINE_COUNT,
+  cycleSeconds: CYCLE_SECONDS,
+  musicLoopStartSeconds: MUSIC_LOOP_START_SECONDS,
+  musicLoopSeconds: MUSIC_LOOP_SECONDS,
   mp3LeadSilenceSeconds: MP3_LEAD_SILENCE_SECONDS
 };

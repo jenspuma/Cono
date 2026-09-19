@@ -39,3 +39,10 @@ still need visual review against the supplied clean final mockup.
 The isolated commit candidate was also checked against the committed audio engine:
 Svelte check passed with zero diagnostics, all six committed audio tests passed,
 and the static production build passed with the three new assets included.
+
+## Owner acceptance — 2026-09-19
+
+The owner tested the updated edition and approved it as releasable. This supersedes
+the pending visual review above; it is manual owner acceptance, not an automated
+browser verification. The previously local audio-loop changes are now included
+in the release candidate together with their seven passing tests.

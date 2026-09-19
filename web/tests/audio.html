@@ -15,20 +15,25 @@ document.querySelector('#run').onclick=async()=>{
  try{
  await e.load();assert(sources.length===0,'all 13 MP3 files fetched and decoded');
  let selections=Array(14).fill(0),lines=[];
- await e.play(()=>selections,l=>{lines.push({line:l,time:context.currentTime});log('UI line '+l+' at '+(context.currentTime-sources[0].starts[0][0]).toFixed(3)+'s');});
+ await e.play(()=>selections,l=>{lines.push({line:l,time:context.currentTime});log('Line '+l+' at '+(context.currentTime-sources[0].starts[0][0]).toFixed(3)+'s');},next=>{selections=next;});
  const start=sources[0].starts[0][0];
  assert(sources.length===13,'13 native Web Audio sources');
- assert(sources.slice(1).every(s=>Math.abs(s.starts[0][0]-start-5.6)<1e-9),'all vocals scheduled exactly 5.6s after Music');
- assert(sources.every(s=>Math.abs(s.starts[0][1]-2256/44100)<1e-9),'matching 2256/44100s offset on all tracks');
- for(let i=0;i<sources.length;i++){
- const b=sources[i].node.buffer,data=b.getChannelData(0);let first=0;while(first<data.length&&Math.abs(data[first])<0.001)first++;
- log(JSON.stringify({asset:i===0?'Music':'Verse'+i,sampleRate:b.sampleRate,duration:b.duration,firstAboveMinus60dB:first/b.sampleRate}));
- }
- await new Promise(r=>setTimeout(r,6100));assert(gains[0].gain.value===1&&gains.slice(1).every(g=>g.gain.value===0),'only selected voice audible after intro');
+ assert(sources.slice(1).every(s=>Math.abs(s.starts[0][0]-start-5.6)<1e-9),'vocals start at 5.6s');
+ assert(sources.every(s=>s.node.loop&&s.stops.length===0),'all sources loop without a scheduled stop');
+ assert(sources.slice(1).every(s=>Math.abs(s.node.buffer.duration-89.6)<1e-8),'all voice buffers are exactly 89.6s including padding');
+ assert(Math.abs(sources[0].node.loopEnd-sources[0].node.loopStart-537.6)<1e-8,'backing repeats its original 537.6s music section');
+ await new Promise(r=>setTimeout(r,6100));
  selections[0]=4;selections[1]=11;e.updateSelections();
- await new Promise(r=>setTimeout(r,100));assert(gains[4].gain.value===1&&gains[0].gain.value===0,'current line edit changes audible source live');
- await new Promise(r=>setTimeout(r,6200));assert(gains[11].gain.value===1&&gains[4].gain.value===0,'next line switches to edited choice at 12.0s');
- assert(lines.some(l=>l.line===1),'line indicator advances');e.stop();
+ await new Promise(r=>setTimeout(r,7000));
+ assert(selections[0]===4&&selections[1]===11,'live edits survive audio-thread notifications');
+ log('Waiting for full 14-line loop...');
+ await new Promise(r=>setTimeout(r,83500));
+ const starts=lines.filter(l=>l.line===0);
+ assert(starts.length>=2,'second verse begins automatically');
+ assert(Math.abs(starts[1].time-starts[0].time-89.6)<0.15,'cycle is 89.6s with no repeated intro');
+ assert(sources.length===13&&sources.every(s=>s.stops.length===0),'same sources remain running across the boundary');
+ assert(selections[0]===4,'manual choices persist into next verse');
+ e.stop();assert(sources.every(s=>s.stops.length===1),'Stop stops every looping source');
  await e.play(()=>selections,l=>lines.push({line:l,time:context.currentTime}));e.stop();const count=lines.length;
  await new Promise(r=>setTimeout(r,6100));assert(lines.length===count,'Stop during intro leaves no stale callbacks');
  log('COMPLETE');

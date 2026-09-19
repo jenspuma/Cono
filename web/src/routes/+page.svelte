@@ -68,10 +68,7 @@
       await engine.play(
         () => selections,
         (line) => (currentLine = line),
-        () => {
-          isPlaying = false;
-          currentLine = -1;
-        }
+        (nextSelections) => (selections = nextSelections)
       );
     } catch (e) {
       error = e instanceof Error ? e.message : String(e);

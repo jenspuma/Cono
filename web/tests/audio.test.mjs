@@ -1,64 +1,82 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { ConoAudioEngine, conoTiming } from '../src/lib/audio/ConoAudioEngine.ts';
-let ctx, timers, nextTimer;
-class Param {
-  value = 0; events = [];
-  setValueAtTime(value,time) { this.events.push({value,time}); }
-  cancelScheduledValues(time) { this.events = this.events.filter(e=>e.time<time); }
+import vm from 'node:vm';
+import { readFileSync } from 'node:fs';
+import { ConoAudioEngine } from '../src/lib/audio/ConoAudioEngine.ts';
+let ctx;
+class Buffer {
+  sampleRate=100; numberOfChannels=1; length=8930;
+  data=new Float32Array(this.length).fill(0.5);
+  getChannelData(){return this.data;}
+  copyToChannel(data){this.data.set(data);}
 }
 class Source {
-  starts=[]; stops=[]; onended=null;
-  connect() {} disconnect() {}
-  start(...args) { this.starts.push(args); }
-  stop(time) { this.stops.push(time); }
+  starts=[]; stops=[];
+  connect(){} disconnect(){}
+  start(...a){this.starts.push(a);} stop(...a){this.stops.push(a);}
+}
+class Mixer {
+  messages=[];
+  constructor(context,name,options){this.options=options;this.port={postMessage:m=>this.messages.push(m)};context.mixer=this;}
+  connect(){} disconnect(){}
 }
 class Context {
-  currentTime=10; destination={}; sources=[]; gains=[];
-  constructor() { ctx=this; }
-  async resume() {} async close() {}
-  async decodeAudioData() { return {}; }
-  createBufferSource() { const s=new Source();this.sources.push(s);return s; }
-  createGain() { const g={gain:new Param(),connect(){},disconnect(){}};this.gains.push(g);return g; }
+  currentTime=10;destination={};sources=[];
+  audioWorklet={addModule:async()=>{}};
+  constructor(){ctx=this;}
+  async resume(){} async close(){} async decodeAudioData(){return new Buffer();}
+  createBuffer(channels,length,rate){const b=new Buffer();b.length=length;b.sampleRate=rate;b.data=new Float32Array(length);return b;}
+  createBufferSource(){const s=new Source();this.sources.push(s);return s;}
 }
-async function setup() {
-  timers=new Map();nextTimer=0;
-  globalThis.window={setInterval(fn){timers.set(++nextTimer,fn);return nextTimer;},clearInterval(id){timers.delete(id);}};
-  globalThis.AudioContext=Context;
+async function setup(){
+  globalThis.AudioContext=Context;globalThis.AudioWorkletNode=Mixer;
   globalThis.fetch=async()=>({ok:true,arrayBuffer:async()=>new ArrayBuffer(0)});
   const engine=new ConoAudioEngine();await engine.load();return engine;
 }
-const near=(a,b)=>assert.ok(Math.abs(a-b)<1e-9,`${a} != ${b}`);
-test('13 sources share offsets; vocals enter at 5.6s; all 14 boundaries are audio-clock events',async()=>{
-  const e=await setup();await e.play(()=>Array.from({length:14},(_,i)=>i%12));
-  const start=ctx.sources[0].starts[0][0];assert.equal(ctx.sources.length,13);
-  for(const s of ctx.sources.slice(1)){near(s.starts[0][0]-start,5.6);near(s.starts[0][1],2256/44100);}
-  near(ctx.sources[0].starts[0][1],2256/44100);
-  for(let line=0;line<14;line++)for(let voice=0;voice<12;voice++){
-    const event=ctx.gains[voice].gain.events[line+1];near(event.time,start+5.6+line*6.4);assert.equal(event.value,voice===line%12?1:0);
-  }
-  for(const s of ctx.sources)near(s.stops[0]-start,95.2);
+const near=(a,b)=>assert.ok(Math.abs(a-b)<1e-8,`${a} != ${b}`);
+test('native sources loop indefinitely with exact vocal and original backing periods',async()=>{
+  const e=await setup();await e.play(()=>Array(14).fill(0));
+  const [music,...voices]=ctx.sources;assert.equal(voices.length,12);
+  near(music.loopStart,96+2256/44100);near(music.loopEnd-music.loopStart,537.6);
+  for(const s of ctx.sources){assert.equal(s.loop,true);assert.equal(s.stops.length,0);}
+  for(const s of voices){near(s.starts[0][0]-music.starts[0][0],5.6);near(s.loopEnd,89.6);assert.equal(s.buffer.length,8960);assert.equal(s.buffer.data.at(-1),0);}
 });
-test('Stop during intro cancels callbacks and restart has just one timer',async()=>{
+test('Stop stops all sources and ignores old mixer messages after restart',async()=>{
   const e=await setup();let lines=[];await e.play(()=>[],l=>lines.push(l));
-  const stale=[...timers.values()][0];e.stop();assert.equal(timers.size,0);
-  await e.play(()=>[],l=>lines.push(l));ctx.currentTime=100;stale();assert.deepEqual(lines,[]);assert.equal(timers.size,1);
+  const sources=ctx.sources.slice(),mixer=ctx.mixer,stale=mixer.port.onmessage;
+  e.stop();for(const s of sources)assert.equal(s.stops.length,1);
+  assert.equal(mixer.messages.at(-1).type,'stop');await e.play(()=>[],l=>lines.push(l));
+  stale({data:{line:3,selections:[]}});assert.deepEqual(lines,[]);
 });
-test('Stop while resume is pending cannot restart audio',async()=>{
-  const e=await setup();let resume;ctx.resume=()=>new Promise(resolve=>resume=resolve);
-  const pending=e.play(()=>[]);e.stop();resume();await pending;assert.equal(ctx.sources.length,0);assert.equal(timers.size,0);
+test('Stop during pending resume prevents playback',async()=>{
+  const e=await setup();let resume;ctx.resume=()=>new Promise(r=>resume=r);
+  const p=e.play(()=>[]);e.stop();resume();await p;assert.equal(ctx.sources.length,0);
 });
-test('live edits replace current voice and future scheduled choices',async()=>{
-  const e=await setup();let selections=Array(14).fill(0);await e.play(()=>selections);
-  ctx.currentTime=17;selections[0]=4;selections[1]=11;e.updateSelections();
-  assert.equal(ctx.gains[0].gain.events.find(e=>e.time===17).value,0);
-  assert.equal(ctx.gains[4].gain.events.find(e=>e.time===17).value,1);
-  assert.equal(ctx.gains[11].gain.events.find(e=>Math.abs(e.time-22.1)<1e-9).value,1);
+test('live selections are sent to the audio thread',async()=>{
+  const e=await setup();let choices=Array(14).fill(0);await e.play(()=>choices);
+  choices[0]=11;e.updateSelections();assert.equal(ctx.mixer.messages.at(-1).selections[0],11);
 });
-test('delayed UI tick catches up from audio clock; natural end runs once',async()=>{
-  const e=await setup();let lines=[],stops=0;await e.play(()=>[],l=>lines.push(l),()=>stops++);
-  ctx.currentTime=42;[...timers.values()][0]();assert.deepEqual(lines,[4]);
-  const end=ctx.sources[0].onended;end();end();assert.equal(stops,1);assert.equal(timers.size,0);
+function processor(){
+  const scope={sampleRate:100,currentFrame:0,Math:Object.create(Math),AudioWorkletProcessor:class{port={messages:[],postMessage(m){this.messages.push(m);}};},registerProcessor(name,cls){scope.Processor=cls;}};
+  scope.Math.random=()=>0.55;vm.createContext(scope);
+  vm.runInContext(readFileSync(new URL('../static/assets/cono-mixer.js',import.meta.url),'utf8'),scope);
+  const p=new scope.Processor({processorOptions:{startTime:5.6,selections:Array.from({length:14},(_,i)=>i%12)}});
+  const inputs=Array.from({length:12},(_,i)=>[new Float32Array(1).fill(i+1)]);
+  const tick=(time)=>{scope.currentFrame=Math.round(time*100);const outputs=[[new Float32Array(1),new Float32Array(1)]];p.process(inputs,outputs);return outputs[0][0][0];};
+  return {p,tick};
+}
+test('audio thread switches every 6.4 seconds, wraps at 95.2s and continues for hours without page timers',()=>{
+  const {p,tick}=processor();assert.equal(tick(5.59),0);
+  for(let line=0;line<14;line++)assert.equal(tick(5.6+line*6.4),line%12+1);
+  assert.equal(tick(95.19),2);assert.equal(tick(95.2),7);
+  assert.equal(p.port.messages.at(-1).line,0);assert.equal(p.port.messages.at(-1).cycle,1);
+  assert.equal(tick(5.6+89.6*100),7);assert.equal(p.port.messages.at(-1).cycle,100);
+});
+test('manual edits persist into next verse then automatic randomization resumes',()=>{
+  const {p,tick}=processor();tick(5.6);
+  p.port.onmessage({data:{type:'selections',selections:Array(14).fill(11)}});
+  assert.equal(tick(6),12);assert.equal(tick(95.2),12);assert.equal(tick(184.8),7);
+  p.port.onmessage({data:{type:'stop'}});assert.equal(p.process([],[[new Float32Array(1)]]),false);
 });
 test('asset failure rejects load with filename',async()=>{
   const e=await setup();globalThis.fetch=async()=>({ok:false});await assert.rejects(e.load(),/Music.mp3/);
