@@ -22,11 +22,6 @@
 
   onMount(() => {
     mounted = true;
-    for (const item of previewThemes) {
-      for (const src of [item.hero, item.botanicalAsset]) {
-        if (src) { const image = new Image(); image.src = `${base}${src}`; }
-      }
-    }
     void load();
     return () => { mounted = false; engine.dispose(); };
   });
@@ -127,7 +122,9 @@
     <aside class="landscape-collage" aria-label="Visual theme">
       <h2 class="theme-heading"><span>{String(theme.id).padStart(2, '0')} —</span> {theme.title}</h2>
       <div class="artwork-frame">
-        <img class="landscape" src={`${base}${theme.hero}`} alt={`${theme.artDirection}; ${theme.secondaryMotif}.`} width="1024" height="1536" />
+        {#each themes as artwork (artwork.id)}
+          <img class="landscape artwork-layer" class:visible={theme.id === artwork.id} src={`${base}${artwork.hero}`} alt={theme.id === artwork.id ? `${artwork.artDirection}; ${artwork.secondaryMotif}.` : ''} aria-hidden={theme.id !== artwork.id} width="1024" height="1536" />
+        {/each}
       </div>
       <div class="paper-note" style:background-image={`url('${base}${theme.paper}')`} aria-hidden="true">
         <p>{#each theme.note.split(' / ') as line}{line}<br />{/each}</p><span class="small-rule"></span>
@@ -161,7 +158,11 @@
 
     <aside class="botanical" aria-hidden="true">
       <p>A constellation<br />of verses,<br />a universe<br />of listening.</p><span class="small-rule"></span>
-      <div class="botanical-frame"><img src={`${base}${theme.botanicalAsset}`} alt="" width="1024" height="1536" /></div>
+      <div class="botanical-frame">
+        {#each themes as artwork (artwork.id)}
+          <img class="artwork-layer" class:visible={theme.id === artwork.id} src={`${base}${artwork.botanicalAsset}`} alt="" width="1024" height="1536" />
+        {/each}
+      </div>
       <span class="source-caption">{String(theme.id).padStart(2, '0')} / 12<br />{theme.title}</span>
     </aside>
 
@@ -232,7 +233,7 @@
   .landscape-collage { position: absolute; left: 2.6%; top: 235px; width: 17%; }
   .theme-heading { margin: 0 0 16px; height: 60px; font-size: 21px; font-weight: 400; line-height: 1.25; text-wrap: balance; }
   .theme-heading span { white-space: nowrap; }
-  .artwork-frame { aspect-ratio: 2 / 3; overflow: hidden; background: #f0ede5; }
+  .artwork-frame { position: relative; aspect-ratio: 2 / 3; overflow: hidden; background: #f0ede5; }
   .landscape { display: block; width: 100%; height: 100%; object-fit: cover; }
   .paper-note { position: relative; margin: -4px 0 0 12%; min-height: 170px; padding: 32px 18px 24px; background-color: #f1eee6; background-size: cover; }
   .visual-preview { position: relative; margin-top: 20px; }
@@ -244,7 +245,9 @@
   .visual-preview > p { font: 10px/1.5 Arial, sans-serif; color: #62675b; }
   .source-caption { display: block; margin-top: 18px; font: 10px/1.8 Arial, sans-serif; letter-spacing: .12em; text-transform: uppercase; max-width: 120px; }
   .paper-note p, .botanical p { margin: 0; font-style: italic; letter-spacing: .1em; font-size: clamp(14px, 1.25vw, 18px); line-height: 1.4; }
-  .botanical-frame { height: 330px; margin: 40px 0 0 -15%; }
+  .artwork-layer { position: absolute; inset: 0; opacity: 0; transition: opacity 240ms ease-in-out; pointer-events: none; }
+  .artwork-layer.visible { opacity: 1; }
+  .botanical-frame { position: relative; height: 330px; margin: 40px 0 0 -15%; }
   .botanical-frame img { width: 100%; height: 100%; object-fit: contain; }
   .botanical { position: absolute; right: 0; top: 298px; width: 13%; pointer-events: none; }
   .about { position: relative; z-index: 2; width: 66%; margin: 95px auto 0; }
