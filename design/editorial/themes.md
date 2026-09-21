@@ -25,7 +25,7 @@ The original reference board (`design/mockups/Codex Image 21 Sept 2026, 08_17_10
 | 11 | Fashion | Tailoring and draped linen | Flax | Pattern paper and fashion engraving |
 | 12 | Climate & Environment | Glacier, alpine lake and weathered mountains | Alpine wildflowers | Contour-map fragment and bee |
 
-The theme follows the source poem of the currently playing line because Cono combines lines from different source poems. Before playback, the opening study is South America. Explore artwork previews any of the twelve themes without modifying lyrics or audio selections; Follow music restores automatic visual switching. Playback and randomization behavior are unchanged.
+The theme follows the source poem of the currently playing line because Cono combines lines from different source poems. While stopped or during the intro, the artwork follows the first line’s selected source poem. Explore artwork previews any of the twelve themes without modifying lyrics or audio selections; Follow music restores automatic visual switching. Playback and randomization behavior are unchanged.
 
 Shared frame dimensions preserve layout during switching, including the long Climate & Environment heading. The twelve-option preview menu scrolls within a bounded panel. Narrow screens keep a compact collage and paper note above the poem. About / Credits includes the twelve-name index and attribution distinction.
 

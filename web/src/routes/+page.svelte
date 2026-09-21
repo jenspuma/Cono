@@ -6,7 +6,7 @@
   import { themes, previewThemes } from '$lib/themes';
 
   let previewId: number | null = null;
-  $: theme = themes[previewId !== null ? previewId - 1 : (currentLine >= 0 ? selections[currentLine] : 0)];
+  $: theme = themes[previewId !== null ? previewId - 1 : selections[currentLine >= 0 ? currentLine : 0]];
 
   const engine = new ConoAudioEngine();
 
