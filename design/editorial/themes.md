@@ -1,30 +1,45 @@
-# Editorial thematic edition — first four studies
+# Editorial thematic edition — all twelve studies
 
-Reference: `design/mockups/Codex Image 21 Sept 2026, 08_17_10.png`, supplied by the owner on 2026-09-21, alongside the original clean Concept 1 mockup. The board is preserved unchanged.
+All twelve source poems have a finished hero collage, organic specimen, paper note and secondary motif. `web/src/lib/themes.ts` is the single source for UI headings, asset set slugs, motif metadata, notes and the About/Credits index.
 
-`web/src/lib/themes.ts` contains all twelve one-based source-poem identities, art direction, organic/secondary motifs, paper-note copy and asset paths. Argentina, Classical Greece, Poetry & Language and Climate & Nature have finished artwork. The remaining eight deliberately display the neutral landscape and olive sprig with their own correct title, pending original artwork.
+## Headline attribution
 
-The theme follows the source poem of the currently playing line because Cono combines lines from different source poems. Before playback, the opening visual study is Argentina. “Explore artwork” pins a visual study without modifying any lyric selections or audio; “Follow music” restores automatic visual switching. Existing audio-loop and randomization behavior is unchanged. No whole-poem selector was added.
+Headlines 1–10 follow Beverley Charles Rowe's stated themes, as quoted by the owner: South America, Ancient Greece, The Sea, India, Italy, Visiting Paris, Twinhood, Poetry, Food and Drink, Death. Fashion and Climate & Environment remain provisional editorial labels for the two additional English-version sonnets. Metadata records this distinction as `headlineSource`. The artwork itself is an editorial interpretation, not a claim about official illustrations.
 
-The heading, hero frame, paper note and botanical frame have shared geometry. Artwork remains visible on narrow screens in a compact two-column study above the poem. Theme headings and notes are HTML, not baked into the artwork. About / Credits stays separate.
+The original reference board (`design/mockups/Codex Image 21 Sept 2026, 08_17_10.png`) is preserved unchanged as historical reference; its earlier labels are superseded by the metadata.
 
-## Asset provenance
+## Artwork system
 
-Artwork generated with the built-in ImageGen tool. Hero PNG masters were generated at portrait 2:3. Production WebP copies preserve alpha on isolated botanical specimens. The shared paper texture is retained from the approved first edition.
+| No. | Headline | Hero | Organic element | Secondary motif |
+|---|---|---|---|---|
+| 01 | South America | Gaucho, pampas and distant Andes | Pampas grass | Atlas fragment |
+| 02 | Ancient Greece | Parthenon marble in Mediterranean light | Olive branch | Marble profile and archaeological drawing |
+| 03 | The Sea | Atlantic fishing harbour and sea mist | Seaweed | Nautical chart and fish engraving |
+| 04 | India | Stone veranda and tea terraces | Tea plant | Textile fragment and teacup |
+| 05 | Italy | Tuscan landscape and Florence dome | Cypress and laurel | Architectural sketch and marble fragment |
+| 06 | Visiting Paris | Paris streets and Seine bookstalls | Plane-tree leaves | Metro ticket and street map |
+| 07 | Twinhood | Paired antique profiles and mirrored fragments | Paired ginkgo stems | Paired photographic fragments |
+| 08 | Poetry | Letterpress page and library light | Laurel | Printing type and manuscript |
+| 09 | Food and Drink | Pear, bread and wine in a quiet still life | Grape vine | Carafe and recipe fragment |
+| 10 | Death | Weathered stone and a cypress grove | Dried poppy | Hourglass and faded paper |
+| 11 | Fashion | Tailoring and draped linen | Flax | Pattern paper and fashion engraving |
+| 12 | Climate & Environment | Glacier, alpine lake and weathered mountains | Alpine wildflowers | Contour-map fragment and bee |
 
-Shared direction: restrained European literary/editorial collage, archival photography, delicate paper grain, muted ivory/olive/sepia/slate, subtle cut edges, no UI, logos, headings or colour swatches. The supplied board was the visual reference for the final Argentina and Climate heroes and all four isolated botanical assets.
+The theme follows the source poem of the currently playing line because Cono combines lines from different source poems. Before playback, the opening study is South America. Explore artwork previews any of the twelve themes without modifying lyrics or audio selections; Follow music restores automatic visual switching. Playback and randomization behavior are unchanged.
 
-- Argentina: gaucho on horseback, distant cattle, Andes/pampas and faded atlas fragment; airy pampas specimen.
-- Classical Greece: Parthenon marble, small classical profile and archaeological drawing; isolated olive branch.
-- Poetry & Language: library window, worn letterpress/manuscript fragments and printing type; isolated laurel.
-- Climate & Nature: receding glacier, alpine lake, rocky foreground, tiny flowers and contour-map fragment; isolated alpine wildflower with a small bee.
+Shared frame dimensions preserve layout during switching, including the long Climate & Environment heading. The twelve-option preview menu scrolls within a bounded panel. Narrow screens keep a compact collage and paper note above the poem. About / Credits includes the twelve-name index and attribution distinction.
 
-Generated images are contemporary illustrative interpretations, not documentary source photographs. Theme names are interpretations of this edition's source poems.
+## Asset provenance and prompts
+
+All artwork was generated with the built-in ImageGen tool. The eight new studies use the complete prompt set in `all-themes-prompts.md`; the four earlier studies retain their existing art under the corrected names. Production WebP assets live in `web/static/assets/editorial/themes/`, with one `<slug>.webp` hero and one `<slug>-botanical.webp` per set. Botanical alpha transparency is preserved. The approved shared paper texture remains `web/static/assets/editorial/paper-note.png`.
+
+The common direction is warm off-white, muted olive/sepia/slate, photographic and botanical realism, restrained collage edges and paper grain, and European editorial typography. These are contemporary generated illustrations rather than documentary photographs.
 
 ## Validation
 
-- Svelte check: 0 errors, 0 warnings; all seven existing audio regression tests passed.
-- Static production build with `BASE_PATH=/Cono` passed.
-- Browser inspected at 1440×1080 and 390×844. All four ready sets loaded successfully; measured heading, hero, note, poem and About geometry stayed identical between themes at desktop. On mobile, hero and poem document positions stayed identical across all four sets, with no horizontal overflow.
-- Played the local edition and verified that the theme heading matched the active line's source poem (11 → Fashion), including the neutral fallback. Stop and artwork preview work independently.
-- All eight production artwork files total approximately 2.3 MB; original reference board retained without changes.
+- Svelte check: no errors or warnings; seven existing audio regression tests pass.
+- Static production build with BASE_PATH=/Cono passes.
+- Browser tested at 1440×1080 and 390×844; all twelve theme pairs load.
+- Desktop heading, hero, note and poem geometry is identical for every theme.
+- Mobile hero and poem document positions are identical across all twelve, with no horizontal overflow.
+- All twelve headlines are shared by preview, hero heading, metadata and About/Credits.

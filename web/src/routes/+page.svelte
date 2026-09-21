@@ -127,7 +127,7 @@
     <aside class="landscape-collage" aria-label="Visual theme">
       <h2 class="theme-heading"><span>{String(theme.id).padStart(2, '0')} —</span> {theme.title}</h2>
       <div class="artwork-frame">
-        <img class="landscape" src={`${base}${theme.hero ?? '/assets/editorial/landscape.png'}`} alt={theme.status === 'ready' ? `${theme.artDirection}; ${theme.botanical}; ${theme.secondaryMotif}.` : 'Neutral landscape study for this edition.'} width="1024" height="1536" />
+        <img class="landscape" src={`${base}${theme.hero}`} alt={`${theme.artDirection}; ${theme.secondaryMotif}.`} width="1024" height="1536" />
       </div>
       <div class="paper-note" style:background-image={`url('${base}${theme.paper}')`} aria-hidden="true">
         <p>{#each theme.note.split(' / ') as line}{line}<br />{/each}</p><span class="small-rule"></span>
@@ -161,7 +161,7 @@
 
     <aside class="botanical" aria-hidden="true">
       <p>A constellation<br />of verses,<br />a universe<br />of listening.</p><span class="small-rule"></span>
-      <div class="botanical-frame"><img src={`${base}${theme.botanicalAsset ?? '/assets/editorial/botanical-sprig.png'}`} alt="" width="1024" height="1536" /></div>
+      <div class="botanical-frame"><img src={`${base}${theme.botanicalAsset}`} alt="" width="1024" height="1536" /></div>
       <span class="source-caption">{String(theme.id).padStart(2, '0')} / 12<br />{theme.title}</span>
     </aside>
 
@@ -172,6 +172,9 @@
           <h2>About the work</h2>
           <p><i lang="fr">Cent mille milliards de poèmes</i> is a work by Raymond Queneau, first published in 1961. Its ten sonnets each have fourteen interchangeable lines, allowing the reader to construct 10¹⁴ poems — 100,000,000,000,000 possible combinations.</p>
           <p>This interactive musical interpretation gives each line a recorded vocal performance. As the selected lines change, the music continues, creating a changing relationship between language and sound.</p>
+          <h2>Visual themes</h2>
+          <p>The first ten theme headlines follow Beverley Charles Rowe’s stated themes for the original sonnets. Fashion and Climate &amp; Environment are provisional editorial labels for the two additional English-version sonnets. The collages are visual interpretations of these themes.</p>
+          <ol class="theme-index">{#each themes as item}<li>{item.title}</li>{/each}</ol>
           <h2>The English version</h2>
           <p>This edition uses Beverley Charles Rowe’s English translation, including two additional verse sets. Twelve alternatives for each of fourteen lines allow 12¹⁴, or 1,283,918,464,548,864, different poems.</p>
         </section>
@@ -227,7 +230,7 @@
   .step:hover:not(:disabled) { background: #eae6dc; opacity: 1; }
   .step:disabled { opacity: .18; cursor: default; }
   .landscape-collage { position: absolute; left: 2.6%; top: 235px; width: 17%; }
-  .theme-heading { margin: 0 0 16px; min-height: 54px; font-size: 21px; font-weight: 400; line-height: 1.25; text-wrap: balance; }
+  .theme-heading { margin: 0 0 16px; height: 60px; font-size: 21px; font-weight: 400; line-height: 1.25; text-wrap: balance; }
   .theme-heading span { white-space: nowrap; }
   .artwork-frame { aspect-ratio: 2 / 3; overflow: hidden; background: #f0ede5; }
   .landscape { display: block; width: 100%; height: 100%; object-fit: cover; }
@@ -235,7 +238,7 @@
   .visual-preview { position: relative; margin-top: 20px; }
   .visual-preview summary { font: 10px/1.5 Arial, sans-serif; letter-spacing: .12em; text-transform: uppercase; gap: 8px; }
   .visual-preview summary::before { display: none; }
-  .theme-options { position: absolute; bottom: 100%; width: 100%; z-index: 3; display: grid; gap: 5px; padding: 8px; background: #fbfaf6; border: 1px solid #d6d2c5; box-shadow: 0 6px 20px #34363215; }
+  .theme-options { position: absolute; bottom: 100%; width: 100%; max-height: 360px; overflow-y: auto; overscroll-behavior: contain; z-index: 3; display: grid; gap: 5px; padding: 8px; background: #fbfaf6; border: 1px solid #d6d2c5; box-shadow: 0 6px 20px #34363215; }
   .theme-options button { text-align: left; border: 1px solid transparent; background: transparent; padding: 7px; font-size: 13px; cursor: pointer; }
   .theme-options button.selected { background: #ebe8df; border-color: #d6d2c5; }
   .visual-preview > p { font: 10px/1.5 Arial, sans-serif; color: #62675b; }
@@ -252,6 +255,8 @@
   .about-content { display: grid; grid-template-columns: 1.3fr 1fr; gap: 50px; padding: 35px 0 20px; font-size: 17px; line-height: 1.6; }
   .about-content h2 { margin: 0 0 12px; font-weight: 400; font-size: 25px; }
   .about-content p { margin: 0 0 24px; }
+  .theme-index { columns: 2; padding-left: 24px; margin: 0 0 26px; font-size: 15px; }
+  .theme-index li { break-inside: avoid; padding: 3px 0; }
   dl { margin: 0; }
   dt { font: 11px/1.6 Arial, sans-serif; text-transform: uppercase; letter-spacing: .07em; color: #666b5f; }
   dd { margin: 4px 0 22px; }
@@ -267,7 +272,7 @@
     .botanical { width: 11%; }
     .botanical p { font-size: 13px; }
     .paper-note { padding: 28px 12px; }
-    .theme-heading { font-size: 18px; min-height: 68px; }
+    .theme-heading { font-size: 18px; height: 68px; }
     .paper-note p { font-size: 13px; }
   }
   @media (max-width: 760px) {
@@ -286,7 +291,7 @@
     .line-text { font-size: 19px; line-height: 1.4; }
     .line-number { font-size: 11px; }
     .landscape-collage { position: relative; left: auto; top: auto; width: 100%; max-width: 450px; margin: 18px auto 30px; display: grid; grid-template-columns: 1fr 1fr; column-gap: 16px; }
-    .theme-heading { grid-column: 1 / -1; min-height: 48px; margin-bottom: 10px; font-size: 22px; }
+    .theme-heading { grid-column: 1 / -1; height: 60px; margin-bottom: 10px; font-size: 22px; }
     .artwork-frame { grid-column: 1; grid-row: 2; }
     .paper-note { grid-column: 2; grid-row: 2; margin: 20px 0 0; align-self: start; min-height: 140px; padding: 25px 14px; }
     .visual-preview { grid-column: 1 / -1; margin-top: 10px; }
