@@ -3,6 +3,11 @@
   import { base } from '$app/paths';
   import { ConoAudioEngine } from '$lib/audio/ConoAudioEngine';
 
+  import { themes, previewThemes } from '$lib/themes';
+
+  let previewId: number | null = null;
+  $: theme = themes[previewId !== null ? previewId - 1 : (currentLine >= 0 ? selections[currentLine] : 0)];
+
   const engine = new ConoAudioEngine();
 
   let poems: string[][] = [];
@@ -17,6 +22,11 @@
 
   onMount(() => {
     mounted = true;
+    for (const item of previewThemes) {
+      for (const src of [item.hero, item.botanicalAsset]) {
+        if (src) { const image = new Image(); image.src = `${base}${src}`; }
+      }
+    }
     void load();
     return () => { mounted = false; engine.dispose(); };
   });
@@ -114,11 +124,24 @@
       {#if loading}Loading music… {loadedAudio}/{audioTotal}{:else if error}<span class="error">{error}</span>{/if}
     </div>
 
-    <aside class="landscape-collage" aria-hidden="true">
-      <img class="landscape" src={`${base}/assets/editorial/landscape.png`} alt="" width="887" height="1774" />
-      <div class="paper-note" style:background-image={`url('${base}/assets/editorial/paper-note.png')`}>
-        <p>The same<br />words,<br />different<br />arrangements.</p><span class="small-rule"></span>
+    <aside class="landscape-collage" aria-label="Visual theme">
+      <h2 class="theme-heading"><span>{String(theme.id).padStart(2, '0')} —</span> {theme.title}</h2>
+      <div class="artwork-frame">
+        <img class="landscape" src={`${base}${theme.hero ?? '/assets/editorial/landscape.png'}`} alt={theme.status === 'ready' ? `${theme.artDirection}; ${theme.botanical}; ${theme.secondaryMotif}.` : 'Neutral landscape study for this edition.'} width="1024" height="1536" />
       </div>
+      <div class="paper-note" style:background-image={`url('${base}${theme.paper}')`} aria-hidden="true">
+        <p>{#each theme.note.split(' / ') as line}{line}<br />{/each}</p><span class="small-rule"></span>
+      </div>
+      <details class="visual-preview">
+        <summary>Explore artwork</summary>
+        <div class="theme-options" aria-label="Artwork preview">
+          <button class:selected={previewId === null} aria-pressed={previewId === null} onclick={() => previewId = null}>Follow music</button>
+          {#each previewThemes as item}
+            <button class:selected={previewId === item.id} aria-pressed={previewId === item.id} onclick={() => previewId = item.id}>{String(item.id).padStart(2, '0')} — {item.title}</button>
+          {/each}
+        </div>
+        <p>Artwork only. Your poem stays the same.</p>
+      </details>
     </aside>
 
     <section class="poem" aria-label="Fourteen lines of the poem">
@@ -138,7 +161,8 @@
 
     <aside class="botanical" aria-hidden="true">
       <p>A constellation<br />of verses,<br />a universe<br />of listening.</p><span class="small-rule"></span>
-      <img src={`${base}/assets/editorial/botanical-sprig.png`} alt="" width="1024" height="1536" />
+      <div class="botanical-frame"><img src={`${base}${theme.botanicalAsset ?? '/assets/editorial/botanical-sprig.png'}`} alt="" width="1024" height="1536" /></div>
+      <span class="source-caption">{String(theme.id).padStart(2, '0')} / 12<br />{theme.title}</span>
     </aside>
 
     <details class="about">
@@ -202,12 +226,24 @@
   .step svg { width: 13px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.4; }
   .step:hover:not(:disabled) { background: #eae6dc; opacity: 1; }
   .step:disabled { opacity: .18; cursor: default; }
-  .landscape-collage { position: absolute; left: 0; top: 205px; width: 17.5%; pointer-events: none; }
-  .landscape { position: relative; display: block; width: 82%; height: auto; aspect-ratio: 1 / 1.87; object-fit: cover; z-index: 1; }
-  .paper-note { margin: -45px 0 0 20%; padding: 96px 24px 45px; background-color: #f1eee6; background-size: cover; }
+  .landscape-collage { position: absolute; left: 2.6%; top: 235px; width: 17%; }
+  .theme-heading { margin: 0 0 16px; min-height: 54px; font-size: 21px; font-weight: 400; line-height: 1.25; text-wrap: balance; }
+  .theme-heading span { white-space: nowrap; }
+  .artwork-frame { aspect-ratio: 2 / 3; overflow: hidden; background: #f0ede5; }
+  .landscape { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .paper-note { position: relative; margin: -4px 0 0 12%; min-height: 170px; padding: 32px 18px 24px; background-color: #f1eee6; background-size: cover; }
+  .visual-preview { position: relative; margin-top: 20px; }
+  .visual-preview summary { font: 10px/1.5 Arial, sans-serif; letter-spacing: .12em; text-transform: uppercase; gap: 8px; }
+  .visual-preview summary::before { display: none; }
+  .theme-options { position: absolute; bottom: 100%; width: 100%; z-index: 3; display: grid; gap: 5px; padding: 8px; background: #fbfaf6; border: 1px solid #d6d2c5; box-shadow: 0 6px 20px #34363215; }
+  .theme-options button { text-align: left; border: 1px solid transparent; background: transparent; padding: 7px; font-size: 13px; cursor: pointer; }
+  .theme-options button.selected { background: #ebe8df; border-color: #d6d2c5; }
+  .visual-preview > p { font: 10px/1.5 Arial, sans-serif; color: #62675b; }
+  .source-caption { display: block; margin-top: 18px; font: 10px/1.8 Arial, sans-serif; letter-spacing: .12em; text-transform: uppercase; max-width: 120px; }
   .paper-note p, .botanical p { margin: 0; font-style: italic; letter-spacing: .1em; font-size: clamp(14px, 1.25vw, 18px); line-height: 1.4; }
+  .botanical-frame { height: 330px; margin: 40px 0 0 -15%; }
+  .botanical-frame img { width: 100%; height: 100%; object-fit: contain; }
   .botanical { position: absolute; right: 0; top: 298px; width: 13%; pointer-events: none; }
-  .botanical img { display: block; width: 135%; height: auto; max-height: 380px; object-fit: contain; margin: 75px 0 0 -6%; }
   .about { position: relative; z-index: 2; width: 66%; margin: 95px auto 0; }
   summary { display: flex; align-items: center; gap: 28px; cursor: pointer; list-style: none; padding: 10px 0; font-size: 12px; letter-spacing: .32em; }
   summary::-webkit-details-marker { display: none; }
@@ -230,7 +266,8 @@
     .step { width: 24px; }
     .botanical { width: 11%; }
     .botanical p { font-size: 13px; }
-    .paper-note { padding: 80px 15px 28px; }
+    .paper-note { padding: 28px 12px; }
+    .theme-heading { font-size: 18px; min-height: 68px; }
     .paper-note p { font-size: 13px; }
   }
   @media (max-width: 760px) {
@@ -248,7 +285,13 @@
     .step { width: 28px; min-height: 40px; }
     .line-text { font-size: 19px; line-height: 1.4; }
     .line-number { font-size: 11px; }
-    .landscape-collage { position: relative; top: auto; width: 160px; margin: 28px auto 8px; display: none; }
+    .landscape-collage { position: relative; left: auto; top: auto; width: 100%; max-width: 450px; margin: 18px auto 30px; display: grid; grid-template-columns: 1fr 1fr; column-gap: 16px; }
+    .theme-heading { grid-column: 1 / -1; min-height: 48px; margin-bottom: 10px; font-size: 22px; }
+    .artwork-frame { grid-column: 1; grid-row: 2; }
+    .paper-note { grid-column: 2; grid-row: 2; margin: 20px 0 0; align-self: start; min-height: 140px; padding: 25px 14px; }
+    .visual-preview { grid-column: 1 / -1; margin-top: 10px; }
+    .theme-options { grid-template-columns: 1fr 1fr; }
+
     .about { width: 100%; margin-top: 38px; }
     summary { gap: 16px; font-size: 11px; letter-spacing: .22em; }
     .about-content { grid-template-columns: 1fr; gap: 12px; padding: 28px 8px 0; }
